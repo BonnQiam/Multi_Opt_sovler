@@ -68,7 +68,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef CPPAD_TESTVECTOR( CppAD::AD<double> ) ad_vector;
 
 namespace CppAD{
-  CppAD::AD<double> Constraint (const ad_vector &x, const size_t &n, const size_t &A, const size_t &B){
+  //CppAD::AD is a type that is used to represent the function f(x) in the form of f(CppAD::AD<double> x)
+  CppAD::AD<double> Constraint (const ad_vector &x, const size_t &n, const double &A, const double &B){
     return A*x[0]+B*x[1];  
   }
 
@@ -85,8 +86,7 @@ using Eigen::Vector2d; // Vector2d is a fixed size vector of size 2
 
 class ExVariables : public VariableSet {
  public:
-  // Every variable set has a name, here "var_set1". this allows the constraints
-  // and costs to define values and Jacobians specifically w.r.t this variable set.
+  // Every variable set has a name, here "var_set1". this allows the constraints and costs to define values and Jacobians specifically w.r.t this variable set.
   ExVariables() : ExVariables("var_set1"){};// using the constructor of the class below, i.e. ExVariables(const std::string& name)
   ExVariables(const std::string& name) : VariableSet(2, name)
   {
@@ -124,18 +124,17 @@ class ExVariables : public VariableSet {
 
 class ExConstraint : public ConstraintSet {
  private:
-  size_t a,b,c;
+  double a,b,c;
   Constraint_type t;
  public:
 
-  // This constraint set just contains 1 constraint, however generally
-  // each set can contain multiple related constraints.
-  ExConstraint(const std::string& name, size_t A, size_t B, size_t C, Constraint_type T) : ConstraintSet(1, name) {a = A; b=B; c = C; t=T;};
+  // This constraint set just contains 1 constraint, however generally each set can contain multiple related constraints.
+  ExConstraint(const std::string& name, double A, double B, double C, Constraint_type T) : ConstraintSet(1, name) {a = A; b=B; c = C; t=T;};
 
   // The constraint value minus the constant value "1", moved to bounds.
   VectorXd GetValues() const override
   {
-    VectorXd g(GetRows());
+    VectorXd g(GetRows());// GetRows() returns the number of rows in this variable set
     Vector2d x = GetVariables()->GetComponent("var_set1")->GetValues();
     //g(0)       = std::pow(x(0), 2) + x(1);
     g(0)       = a*x(0) + b*x(1);
@@ -163,17 +162,13 @@ class ExConstraint : public ConstraintSet {
   }
 
   // This function provides the first derivative of the constraints.
-  // In case this is too difficult to write, you can also tell the solvers to
-  // approximate the derivatives by finite differences and not overwrite this
-  // function, e.g. in ipopt.cc::use_jacobian_approximation_ = true
+  // In case this is too difficult to write, you can also tell the solvers to approximate the derivatives by finite differences and not overwrite this function, e.g. 
+  // in ipopt.cc::use_jacobian_approximation_ = true
   // Attention: see the parent class function for important information on sparsity pattern.
   void FillJacobianBlock(std::string var_set,
                          Jacobian& jac_block) const override
   {
-    // must fill only that submatrix of the overall Jacobian that relates
-    // to this constraint and "var_set1". even if more constraints or variables
-    // classes are added, this submatrix will always start at row 0 and column 0,
-    // thereby being independent from the overall problem.
+    // must fill only that submatrix of the overall Jacobian that relates to this constraint and "var_set1". even if more constraints or variables classes are added, this submatrix will always start at row 0 and column 0, thereby being independent from the overall problem.
     if (var_set == "var_set1") {
       Vector2d x = GetVariables()->GetComponent("var_set1")->GetValues();
 

@@ -52,7 +52,8 @@ int main()
   nlp.AddConstraintSet(std::make_shared<ExConstraint>("constraint 3", 4.0, 3.0, 270.0, 0));
   nlp.AddConstraintSet(std::make_shared<ExConstraint>("constraint 4", 1.0, 2.0, 60.0, 1));
 
-  nlp.AddConstraintSet(std::make_shared<ExConstraint>("constraint 5", 8.0, 12.0, 840.0, 2));
+  //nlp.AddConstraintSet(std::make_shared<ExConstraint>("constraint 5", 8.0, 12.0, 840.0, 2));
+  nlp.AddConstraintSet(std::make_shared<ExConstraint>("constraint 5", -8.0, -12.0, -840.0, 2));
 
   nlp.AddCostSet(std::make_shared<ExCost>());
   
@@ -65,8 +66,13 @@ int main()
 
   // 3 . solve
   ipopt.Solve(nlp);
+  
   Eigen::VectorXd x = nlp.GetOptVariables()->GetValues();
   std::cout << x.transpose() << std::endl;
+
+  int iteration = nlp.GetIterationCount();
+  std::cout << "Iteration: " << iteration << std::endl;
+
   Eigen::VectorXd cost_opt = nlp.GetCosts().GetValues();
   std::cout << "Cost: " << cost_opt << std::endl;
 
